@@ -24,16 +24,15 @@ public class NoFlyZone {
     private Path2D noFlyZoneArea = new Path2D.Double();
 
     private  ArrayList<LngLat> noFlyZoneCoordinates = new ArrayList<>();
-    
+
 
     public NoFlyZone(@JsonProperty("name")String name, @JsonProperty("coordinates")double[][] rawCoordinates){
         this.name = name;
         this.rawCoordinates = rawCoordinates;
 
         this.noFlyZoneArea.moveTo(this.rawCoordinates[0][0], this.rawCoordinates[0][1]);
-        for(int i = 1 ; i < this.rawCoordinates.length; i ++) {
+        for(int i = 1 ; i < this.rawCoordinates.length - 1; i ++) {
             this.noFlyZoneArea.lineTo(this.rawCoordinates[i][0], this.rawCoordinates[i][1]);
-            this.noFlyZoneArea.moveTo(this.rawCoordinates[i][0], this.rawCoordinates[i][1]);
         }
         this.noFlyZoneArea.closePath();
 
@@ -99,17 +98,6 @@ public class NoFlyZone {
             System.out.println();
         }
 
-//        for (NoFlyZone nfz: nfzs){
-//            for(int i = 0; i < nfz.getNoFlyZoneCoordinates().size(); i ++){
-//                System.out.println(nfz.getNoFlyZoneCoordinates().get(i).getLng());
-//                System.out.println(nfz.getNoFlyZoneCoordinates().get(i).getLat());
-//            }
-//        }
-
-//        for(NoFlyZone nfz: nfzs){
-//            Polygon[] coordinates = nfz.getCoordinates();
-//            System.out.println(coordinates);
-//        }
 
 
 

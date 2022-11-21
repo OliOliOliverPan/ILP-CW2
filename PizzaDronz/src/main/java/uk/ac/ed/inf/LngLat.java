@@ -136,17 +136,6 @@ public class LngLat {
 
 
     public boolean inNoFlyZone(NoFlyZone[] noFlyZones){
-        for(int j = 0; j < noFlyZones.length; j ++) {
-            NoFlyZone first_nfz = noFlyZones[j];
-
-            for (int i = 0; i < first_nfz.getNoFlyZoneCoordinates().size(); i++) {
-                System.out.println(first_nfz.getNoFlyZoneCoordinates().get(i).getLng());
-                System.out.println(first_nfz.getNoFlyZoneCoordinates().get(i).getLat());
-            }
-
-            System.out.println();
-        }
-
 
         boolean inNFZ = false;
         for(NoFlyZone nfz: noFlyZones) {
@@ -176,7 +165,7 @@ public class LngLat {
     public static void main(String[] args) throws MalformedURLException {
         NoFlyZone[] noFlyZones = NoFlyZone.getNoFlyZonesFromRestServer(new URL(NoFlyZone.noFlyZoneUrl));
 
-        LngLat point = new LngLat(-3.1887,55.9456);
+        LngLat point = new LngLat(-3.1882,55.9447);
 
         System.out.println(point.inNoFlyZone(noFlyZones));
 

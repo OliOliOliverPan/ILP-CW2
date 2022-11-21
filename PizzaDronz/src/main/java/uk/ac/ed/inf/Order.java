@@ -42,11 +42,22 @@ public class Order {
 
 
     //parse the order of a given day and classify valid and invalid orders
-    public static ArrayList<Order> getOrdersFromRestServer(String year, String month, String date) throws MalformedURLException, InvalidPizzaCombinationException {
+    public static ArrayList<Order> getOrdersFromRestServer(String month, String date) throws MalformedURLException, InvalidPizzaCombinationException {
+
+        //for month and date, if they are less than 10 and do not start with 0, a 0 will be automatically added before them
+        if(month.length() == 1){
+            month = "0" + month;
+        }
+
+        if(date.length() == 1){
+            date = "0" + date;
+        }
+
+
         Order[] orderList = null;
 
         String orderURL = "https://ilp-rest.azurewebsites.net/orders/";
-        orderURL = orderURL + year + "-" + month + "-" + date;
+        orderURL = orderURL + "2023" + "-" + month + "-" + date;
 
         try {
             orderList = new ObjectMapper().readValue(new URL(orderURL), Order[].class);
@@ -74,13 +85,13 @@ public class Order {
 
         for(Order o: orderList){
 
-            OrderOutcome result = null;
+            OrderOutcome result;
 
             if(o.creditCardNumber.length() != 16){ // sum of the credit card also has rule
                 result = OrderOutcome.InvalidCardNumber;
             }
             else if(Integer.parseInt(o.creditCardExpiry.substring(0,2)) > Integer.parseInt(month)
-                    && (Integer.parseInt(o.creditCardExpiry.substring(3,5)) <= Integer.parseInt(year.substring(2,4)))){
+                    && (Integer.parseInt(o.creditCardExpiry.substring(3,5)) <= 23)) {
                 result = OrderOutcome.InvalidExpiryDate;
             }
             else if(o.cvv.length() != 3){
@@ -96,6 +107,8 @@ public class Order {
             else{
                 result = Order.isValidItems(restaurants, o.orderItems);
             }
+
+
 
             if(result == OrderOutcome.ValidButNotDelivered){
                 validOrders.add(o);
@@ -223,22 +236,8 @@ public class Order {
     }
 
     public static void main(String[] args) throws InvalidPizzaCombinationException, MalformedURLException {
-//        Menu[] civerinosSliceMenu = new Menu[] {new Menu("Margarita", 1000), new Menu("Calzone", 1400)};
-//        Restaurant civerinosSlice = new Restaurant("Civerinos Slice",  civerinosSliceMenu);
-//
-//        Menu[] soraLellaVeganMenu = new Menu[] {new Menu("Meat Lover", 1400), new Menu("Vegan Delight", 1100)};
-//        Restaurant soraLellaVegan = new Restaurant("Sora Lella Vegan",  soraLellaVeganMenu);
-//
-//        Menu[] dominosMenu = new Menu[] {new Menu("Super Cheese", 1400), new Menu("All Shrooms", 900)};
-//        Restaurant dominos = new Restaurant("Domino's Pizza - Edinburgh - Southside",  dominosMenu);
-//
-//        Menu[] sodebergPavillionMenu = new Menu[] {new Menu("Proper Pizza", 1400), new Menu("Pineapple & Ham & Cheese", 900)};
-//        Restaurant sodebergPavillion = new Restaurant("Sodeberg Pavillion",  sodebergPavillionMenu);
-//        Restaurant[] restaurants = new Restaurant[]{civerinosSlice, soraLellaVegan, dominos, sodebergPavillion};
-//        System.out.println(getDeliveryCost(restaurants,"Super Cheese","Super Cheese","Super Cheese","Super Cheese", "Proper Pizza"));
-//        System.out.println(getDeliveryCost(restaurants,"Super Cheese","Super Cheese", "All Shrooms"));
 
-        ArrayList<Order> result = Order.getOrdersFromRestServer("2023","01","01");
+        ArrayList<Order> result = Order.getOrdersFromRestServer("01","01");
         for(Order o: result) {
             System.out.println(o.orderNo);
         }
@@ -248,16 +247,20 @@ public class Order {
 }
 
 
+/*
+        Menu[] civerinosSliceMenu = new Menu[] {new Menu("Margarita", 1000), new Menu("Calzone", 1400)};
+        Restaurant civerinosSlice = new Restaurant("Civerinos Slice",  civerinosSliceMenu);
 
-//            else if(o.priceTotalInPence != Order.getDeliveryCost(restaurants, String.valueOf(o.orderItems))){
-//                result = OrderOutcome.InvalidTotal;
-//            }
-//            else if((o.orderItems.length > 4) || (o.orderItems.length < 1)){
-//                result = OrderOutcome.InvalidPizzaCount;
-//            }
-//            else if(Order.isValidItems(restaurants, String.valueOf(o.orderItems)) == OrderOutcome.InvalidPizzaNotDefined){
-//                result = OrderOutcome.InvalidPizzaNotDefined;
-//            }
-//            else if(Order.isValidItems(restaurants, String.valueOf(o.orderItems)) == OrderOutcome.InvalidPizzaCombinationMultipleSuppliers){
-//                result = OrderOutcome.InvalidPizzaCombinationMultipleSuppliers;
-//            }
+        Menu[] soraLellaVeganMenu = new Menu[] {new Menu("Meat Lover", 1400), new Menu("Vegan Delight", 1100)};
+        Restaurant soraLellaVegan = new Restaurant("Sora Lella Vegan",  soraLellaVeganMenu);
+
+        Menu[] dominosMenu = new Menu[] {new Menu("Super Cheese", 1400), new Menu("All Shrooms", 900)};
+        Restaurant dominos = new Restaurant("Domino's Pizza - Edinburgh - Southside",  dominosMenu);
+
+        Menu[] sodebergPavillionMenu = new Menu[] {new Menu("Proper Pizza", 1400), new Menu("Pineapple & Ham & Cheese", 900)};
+        Restaurant sodebergPavillion = new Restaurant("Sodeberg Pavillion",  sodebergPavillionMenu);
+        Restaurant[] restaurants = new Restaurant[]{civerinosSlice, soraLellaVegan, dominos, sodebergPavillion};
+        System.out.println(getDeliveryCost(restaurants,"Super Cheese","Super Cheese","Super Cheese","Super Cheese", "Proper Pizza"));
+        System.out.println(getDeliveryCost(restaurants,"Super Cheese","Super Cheese", "All Shrooms"));
+
+ */
