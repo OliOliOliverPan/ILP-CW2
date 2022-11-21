@@ -20,9 +20,11 @@ public class Restaurant {
 
 
     /**
-     * The name of the restaurant and an array of its pizzas available
+     * The name and coordinate of the restaurant and an array of its pizzas available
      */
     private String name;
+
+    private LngLat coordinate;
 
     private Menu[] menu;
 
@@ -35,9 +37,11 @@ public class Restaurant {
      * @param name the name of the restaurant
      * @param menu an array of available pizzas of the restaurant
      */
-    public Restaurant(@JsonProperty("name")String name, @JsonProperty("menu")Menu[] menu) {
+    public Restaurant(@JsonProperty("name")String name, @JsonProperty("longitude")double longitude, @JsonProperty("latitude")double latitude,@JsonProperty("menu")Menu[] menu) {
         this.name = name;
+        this.coordinate = new LngLat(longitude, latitude);
         this.menu = menu;
+
     }
 
 
@@ -87,5 +91,8 @@ public class Restaurant {
         return this.menu;
     }
 
+    public LngLat getCoordinate() {
+        return coordinate;
+    }
 
 }

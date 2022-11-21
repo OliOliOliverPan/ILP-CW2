@@ -182,6 +182,7 @@ public class Order {
 
 
 
+
     /**
      * Count the total cost of a given order in pence, including an extra delivery cost of 100p
      *
@@ -235,12 +236,60 @@ public class Order {
 
     }
 
+
+    public static ArrayList<Restaurant> findRestaurant(Restaurant[] restaurants, String month, String date) throws InvalidPizzaCombinationException, MalformedURLException {
+        if(month.length() == 1){
+            month = "0" + month;
+        }
+
+        if(date.length() == 1){
+            date = "0" + date;
+        }
+
+        ArrayList<Restaurant> correspondingRestaurants = new ArrayList<>();
+
+        ArrayList<Order> validOrders = Order.getOrdersFromRestServer(month, date);
+
+        for(Order o: validOrders){
+            String first_menu = o.getOrderItems().get(0);
+            for(Restaurant r: restaurants){
+                Menu[] menu_list  = r.getMenu();
+                for(Menu m: menu_list){
+                    if(m.getName().equals(first_menu)){
+                        correspondingRestaurants.add(r);
+                    }
+                }
+            }
+        }
+
+        return correspondingRestaurants;
+    }
+
+
+    public ArrayList<String> getOrderItems() {
+        return orderItems;
+    }
+
     public static void main(String[] args) throws InvalidPizzaCombinationException, MalformedURLException {
 
-        ArrayList<Order> result = Order.getOrdersFromRestServer("01","01");
+        ArrayList<Order> result = Order.getOrdersFromRestServer("04","15");
+
+        Restaurant[] restaurants = Restaurant.getRestaurantsFromRestServer(new URL(Restaurant.restaurantUrl));
+        ArrayList<Restaurant> correspondingRestaurants = Order.findRestaurant(restaurants,"04       ","15");
+
+        int count = 0;
+        int count_2 = 0;
         for(Order o: result) {
             System.out.println(o.orderNo);
+            count ++;
         }
+        for (Restaurant r: correspondingRestaurants){
+            System.out.println(r.getName());
+            count_2 ++;
+        }
+
+        System.out.println(count);
+        System.out.println(count_2);
     }
 
 
