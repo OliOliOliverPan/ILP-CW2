@@ -28,6 +28,7 @@ public class Order {
     private ArrayList<String> orderItems;
 
 
+
     public Order(@JsonProperty("orderNo")String orderNo, @JsonProperty("orderDate")String orderDate, @JsonProperty("customer")String customer, @JsonProperty("creditCardNumber")String creditCardNumber,
                  @JsonProperty("creditCardExpiry")String creditCardExpiry, @JsonProperty("cvv")String cvv, @JsonProperty("priceTotalInPence")int priceTotalInPence, @JsonProperty("orderItems")ArrayList<String> orderItems) {
         this.orderNo = orderNo;
@@ -39,6 +40,8 @@ public class Order {
         this.priceTotalInPence = priceTotalInPence;
         this.orderItems = orderItems;
     }
+
+
 
 
     //parse the order of a given day and classify valid and invalid orders
@@ -87,25 +90,25 @@ public class Order {
 
             OrderOutcome result;
 
-            if(o.creditCardNumber.length() != 16){ // sum of the credit card also has rule
+            if(((o.getCreditCardNumber().length() != 16)) || (!isValidCreditCardNumber(o.getCreditCardNumber()))) {
                 result = OrderOutcome.InvalidCardNumber;
             }
-            else if(Integer.parseInt(o.creditCardExpiry.substring(0,2)) > Integer.parseInt(month)
-                    && (Integer.parseInt(o.creditCardExpiry.substring(3,5)) <= 23)) {
+            else if(Integer.parseInt(o.getCreditCardExpiry().substring(0,2)) > Integer.parseInt(month)
+                    && (Integer.parseInt(o.getCreditCardExpiry().substring(3,5)) <= 23)) {
                 result = OrderOutcome.InvalidExpiryDate;
             }
-            else if(o.cvv.length() != 3){
+            else if(o.getCvv().length() != 3){
                 result = OrderOutcome.InvalidCvv;
             }
-            else if(o.priceTotalInPence % 100 != 0){ // what if using deliveryCost obtain different answer as o.priceTotalInPence ?
+            else if(o.getPriceTotalInPence() % 100 != 0){ // what if using deliveryCost obtain different answer as o.priceTotalInPence ?
                 result = OrderOutcome.InvalidTotal;
             }
 
-            else if ((o.orderNo.length() != 8) || (o.customer.length() < 1)){
+            else if ((o.getOrderNo().length() != 8) || (o.getCustomer().length() < 1)){
                 result = OrderOutcome.Invalid;
             }
             else{
-                result = Order.isValidItems(restaurants, o.orderItems);
+                result = Order.isValidOrder(restaurants, o.getOrderItems());
             }
 
 
@@ -127,7 +130,7 @@ public class Order {
 
 
     // helper function for determining if an order is valid
-    public static OrderOutcome isValidItems(Restaurant[] restaurants, List<String> orderItems) {
+    public static OrderOutcome isValidOrder(Restaurant[] restaurants, List<String> orderItems) {
 
         // the returned value initialized to valid, and will be changed
         // only when any invalid order criterion is satisfied
@@ -178,7 +181,35 @@ public class Order {
     }
 
 
+    // Apply Luhn's Algorithm to determine if a credit card number is valid or not
+    public static boolean isValidCreditCardNumber(String cardNumber){
 
+        // convert each card number digit to int type
+        int [] cardIntArray = new int[cardNumber.length()];
+
+        for(int i = 0; i<cardNumber.length(); i ++){
+            char c = cardNumber.charAt(i);
+            cardIntArray[i] = Integer.parseInt("" + c);
+
+        }
+
+        for(int i = cardIntArray.length - 2; i >= 0; i = i-2){
+
+
+            int num = cardIntArray[i] ;
+            num = num * 2;
+
+            //if the value of any digit after being doubled is two digits, save the sum of each digit
+            if(num > 9){
+                num = num%10 + (int) Math.floor(num / 10);
+            }
+            cardIntArray[i] = num;
+        }
+
+        int sum = Arrays.stream(cardIntArray).sum();
+
+        return sum % 10 == 0;
+    }
 
 
 
@@ -200,15 +231,15 @@ public class Order {
 
         List<String> orderItemList = Arrays.stream(orderItems).toList();
 
-        if(Order.isValidItems(restaurants, orderItemList) == OrderOutcome.InvalidPizzaCount){
+        if(Order.isValidOrder(restaurants, orderItemList) == OrderOutcome.InvalidPizzaCount){
             throw new IllegalArgumentException("The order is invalid since the number of items is either 0 or exceeds the maximum capacity of drone");
         }
 
-        else if(Order.isValidItems(restaurants, orderItemList) == OrderOutcome.InvalidPizzaNotDefined){
+        else if(Order.isValidOrder(restaurants, orderItemList) == OrderOutcome.InvalidPizzaNotDefined){
             throw new IllegalArgumentException("There's item cannot be found in any restaurant");
         }
 
-        else if(Order.isValidItems(restaurants, orderItemList) == OrderOutcome.InvalidPizzaCombinationMultipleSuppliers){
+        else if(Order.isValidOrder(restaurants, orderItemList) == OrderOutcome.InvalidPizzaCombinationMultipleSuppliers){
             throw new InvalidPizzaCombinationException("The items in the order list cannot be delivered from the same restaurant");
         }
 
@@ -267,15 +298,45 @@ public class Order {
 
 
     public ArrayList<String> getOrderItems() {
-        return orderItems;
+        return this.orderItems;
     }
+
+    public String getOrderDate() {
+        return this.orderDate;
+    }
+
+    public String getCreditCardNumber() {
+        return this.creditCardNumber;
+    }
+
+    public String getCreditCardExpiry() {
+        return this.creditCardExpiry;
+    }
+
+    public String getCvv() {
+        return this.cvv;
+    }
+
+    public int getPriceTotalInPence() {
+        return this.priceTotalInPence;
+    }
+
+    public String getOrderNo() {
+        return this.orderNo;
+    }
+
+    public String getCustomer() {
+        return this.customer;
+    }
+
+
 
     public static void main(String[] args) throws InvalidPizzaCombinationException, MalformedURLException {
 
         ArrayList<Order> result = Order.getOrdersFromRestServer("04","15");
 
         Restaurant[] restaurants = Restaurant.getRestaurantsFromRestServer(new URL(Restaurant.restaurantUrl));
-        ArrayList<Restaurant> correspondingRestaurants = Order.findRestaurant(restaurants,"04       ","15");
+        ArrayList<Restaurant> correspondingRestaurants = Order.findRestaurant(restaurants,"04","15");
 
         int count = 0;
         int count_2 = 0;
@@ -290,6 +351,9 @@ public class Order {
 
         System.out.println(count);
         System.out.println(count_2);
+
+
+        System.out.println(isValidCreditCardNumber("5102312041208609"));
     }
 
 

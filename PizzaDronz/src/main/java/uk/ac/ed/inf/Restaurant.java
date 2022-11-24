@@ -16,8 +16,9 @@ import java.util.ArrayList;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Restaurant {
 
-    public static String restaurantUrl = "https://ilp-rest.azurewebsites.net/restaurants";
-
+    private static final Restaurant[] INSTANCE = new Restaurant[];
+    private String restaurantUrl = "https://ilp-rest.azurewebsites.net/restaurants";
+    public static Restaurant[] getINSTANCE(){  return INSTANCE; }
 
     /**
      * The name and coordinate of the restaurant and an array of its pizzas available
