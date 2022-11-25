@@ -1,14 +1,13 @@
 package uk.ac.ed.inf;
 
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 
 public class Drone {
 
     public static final int BATTERY = 2000;
 
-    private final LngLat startPosition = new LngLat(-3.186874, 55.944494);
+    public static final LngLat START_POSITION = new LngLat(-3.186874, 55.944494);
 
     private LngLat currentPosition;
     private int remainingBattery;
@@ -22,11 +21,14 @@ public class Drone {
 
 
     public Drone(LngLat currentPosition, int remainingBattery, ArrayList<LngLat> flightPath, Order[] deliveryList, String month, String date) throws InvalidPizzaCombinationException, MalformedURLException {
-        this.currentPosition = startPosition;
+        this.currentPosition = START_POSITION;
         this.remainingBattery = BATTERY;
-        this.noFlyZones = NoFlyZone.getNoFlyZonesFromRestServer(new URL(NoFlyZone.noFlyZoneUrl));
-        this.restaurants = Restaurant.getRestaurantsFromRestServer(new URL(Restaurant.restaurantUrl));
+        this.noFlyZones = NoFlyZone.getINSTANCE();
+        this.restaurants = Restaurant.getINSTANCE();
         this.flightPath = null;
-        this.deliveryRestaurantList = Order.findRestaurant(this.restaurants, month, date);
+        this.deliveryRestaurantList = null;
+//        for(int i = 0 ; i < this.deliveryRestaurantList.size(); i ++) {
+//            correspondingRestaurants.add(result.get(i).findRestaurant());
+//        }
     }
 }

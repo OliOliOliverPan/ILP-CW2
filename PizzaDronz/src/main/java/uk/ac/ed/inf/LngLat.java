@@ -163,7 +163,7 @@ public class LngLat {
 
 
     public static void main(String[] args) throws MalformedURLException {
-        NoFlyZone[] noFlyZones = NoFlyZone.getNoFlyZonesFromRestServer(new URL(NoFlyZone.noFlyZoneUrl));
+        NoFlyZone[] noFlyZones = NoFlyZone.getINSTANCE();
 
         LngLat point = new LngLat(-3.1882,55.9447);
 

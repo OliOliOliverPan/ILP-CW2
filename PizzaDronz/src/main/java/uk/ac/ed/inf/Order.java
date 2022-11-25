@@ -8,9 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 /**
  * Class representing the order
@@ -73,24 +71,15 @@ public class Order {
         }
 
 
-        Restaurant[] restaurants = Restaurant.getRestaurantsFromRestServer(new URL(Restaurant.restaurantUrl));
-
         ArrayList<Order> validOrders = new ArrayList<>();
         ArrayList<Order> invalidOrders = new ArrayList<>();
-
-//        for (Restaurant r : restaurants) {
-//            for (Menu m : r.getMenu()) {
-//                System.out.println(m.getName());
-//                    }
-//                }
-
 
 
         for(Order o: orderList){
 
             OrderOutcome result;
 
-            if(((o.getCreditCardNumber().length() != 16)) || (!isValidCreditCardNumber(o.getCreditCardNumber()))) {
+            if(((o.getCreditCardNumber().length() != 16)) || (!o.isValidCreditCardNumber())) {
                 result = OrderOutcome.InvalidCardNumber;
             }
             else if(Integer.parseInt(o.getCreditCardExpiry().substring(0,2)) > Integer.parseInt(month)
@@ -108,7 +97,7 @@ public class Order {
                 result = OrderOutcome.Invalid;
             }
             else{
-                result = Order.isValidOrder(restaurants, o.getOrderItems());
+                result = Order.isValidOrder(o.getOrderItems());
             }
 
 
@@ -122,6 +111,16 @@ public class Order {
 
         }
 
+        Collections.sort(validOrders, (o1, o2) -> {
+            try {
+                return Double.valueOf(Drone.START_POSITION.distanceTo(o1.findRestaurant().getCoordinate())).
+                        compareTo(Drone.START_POSITION.distanceTo(o2.findRestaurant().getCoordinate()));
+
+
+            } catch (MalformedURLException e) {
+                throw new RuntimeException(e);
+            }
+        });
 
         return validOrders;
     }
@@ -129,8 +128,10 @@ public class Order {
 
 
 
-    // helper function for determining if an order is valid
-    public static OrderOutcome isValidOrder(Restaurant[] restaurants, List<String> orderItems) {
+    // helper function for determining if the detail of an order is valid
+    public static OrderOutcome isValidOrder( List<String> orderItems) throws MalformedURLException {
+
+        Restaurant[] restaurants = Restaurant.getINSTANCE();
 
         // the returned value initialized to valid, and will be changed
         // only when any invalid order criterion is satisfied
@@ -177,12 +178,72 @@ public class Order {
             }
         }
 
+
         return result;
     }
 
 
+
+
+
+    /**
+     * Count the total cost of a given order in pence, including an extra delivery cost of 100p
+     *
+     * @param orderItems a list of items to be calculated the total cost with
+     *
+     * @return the total cost of the input order plus 100p delivery cost
+     *
+     * @throws IllegalArgumentException if there is no item in the input order
+     * @throws IllegalArgumentException if the number of pizzas in the order exceeds the maximum capacity of the drone (4)
+     * @throws IllegalArgumentException if an item in the order cannot be found in any of the given restaurant
+     * @throws InvalidPizzaCombinationException if the order contains items that cannot be delivered from the same restaurant
+     */
+    public static int getDeliveryCost( String... orderItems) throws InvalidPizzaCombinationException, MalformedURLException {
+
+        Restaurant[] restaurants = Restaurant.getINSTANCE();
+        List<String> orderItemList = Arrays.stream(orderItems).toList();
+
+        if(Order.isValidOrder(orderItemList) == OrderOutcome.InvalidPizzaCount){
+            throw new IllegalArgumentException("The order is invalid since the number of items is either 0 or exceeds the maximum capacity of drone");
+        }
+
+        else if(Order.isValidOrder(orderItemList) == OrderOutcome.InvalidPizzaNotDefined){
+            throw new IllegalArgumentException("There's item cannot be found in any restaurant");
+        }
+
+        else if(Order.isValidOrder(orderItemList) == OrderOutcome.InvalidPizzaCombinationMultipleSuppliers){
+            throw new InvalidPizzaCombinationException("The items in the order list cannot be delivered from the same restaurant");
+        }
+
+        //if above exceptions are not thrown, the order is valid, and we will find the total cost
+
+        int totalCost = 0;
+
+        // For each ordered item, find its menu among all restaurants and its price in pence,
+        // then add its cost to the total cost
+        for(String s: orderItems){
+            for(Restaurant r: restaurants){
+                for(Menu m: r.getMenu()){
+                    if(m.getName().equals((s))){
+                        totalCost += m.getPriceInPence();
+                    }
+                }
+            }
+
+
+        }
+
+        // Add the delivery cost
+        return totalCost + 100;
+
+
+    }
+
+
+
     // Apply Luhn's Algorithm to determine if a credit card number is valid or not
-    public static boolean isValidCreditCardNumber(String cardNumber){
+    public boolean isValidCreditCardNumber(){
+        String cardNumber = this.getCreditCardNumber();
 
         // convert each card number digit to int type
         int [] cardIntArray = new int[cardNumber.length()];
@@ -213,88 +274,28 @@ public class Order {
 
 
 
+    public Restaurant findRestaurant() throws MalformedURLException {
 
-    /**
-     * Count the total cost of a given order in pence, including an extra delivery cost of 100p
-     *
-     * @param restaurants an array of restaurants whose menus are used to match ordered items with
-     * @param orderItems a list of items to be calculated the total cost with
-     *
-     * @return the total cost of the input order plus 100p delivery cost
-     *
-     * @throws IllegalArgumentException if there is no item in the input order
-     * @throws IllegalArgumentException if the number of pizzas in the order exceeds the maximum capacity of the drone (4)
-     * @throws IllegalArgumentException if an item in the order cannot be found in any of the given restaurant
-     * @throws InvalidPizzaCombinationException if the order contains items that cannot be delivered from the same restaurant
-     */
-    public static int getDeliveryCost(Restaurant[] restaurants, String... orderItems) throws InvalidPizzaCombinationException {
 
-        List<String> orderItemList = Arrays.stream(orderItems).toList();
+        Restaurant[] restaurants = Restaurant.getINSTANCE();
 
-        if(Order.isValidOrder(restaurants, orderItemList) == OrderOutcome.InvalidPizzaCount){
-            throw new IllegalArgumentException("The order is invalid since the number of items is either 0 or exceeds the maximum capacity of drone");
-        }
+        Restaurant correspondingRestaurant = null;
 
-        else if(Order.isValidOrder(restaurants, orderItemList) == OrderOutcome.InvalidPizzaNotDefined){
-            throw new IllegalArgumentException("There's item cannot be found in any restaurant");
-        }
-
-        else if(Order.isValidOrder(restaurants, orderItemList) == OrderOutcome.InvalidPizzaCombinationMultipleSuppliers){
-            throw new InvalidPizzaCombinationException("The items in the order list cannot be delivered from the same restaurant");
-        }
-
-        //if above exceptions are not thrown, the order is valid, and we will find the total cost
-
-        int totalCost = 0;
-
-        // For each ordered item, find its menu among all restaurants and its price in pence,
-        // then add its cost to the total cost
-        for(String s: orderItems){
-            for(Restaurant r: restaurants){
-                for(Menu m: r.getMenu()){
-                    if(m.getName().equals((s))){
-                        totalCost += m.getPriceInPence();
+        String first_menu = this.getOrderItems().get(0);
+        for(Restaurant r: restaurants){
+            Menu[] menu_list  = r.getMenu();
+            for(Menu m: menu_list){
+                if(m.getName().equals(first_menu)){
+                        correspondingRestaurant = r;
+                        break;
                     }
                 }
             }
 
-
-        }
-
-        // Add the delivery cost
-        return totalCost + 100;
-
-
+        return correspondingRestaurant;
     }
 
 
-    public static ArrayList<Restaurant> findRestaurant(Restaurant[] restaurants, String month, String date) throws InvalidPizzaCombinationException, MalformedURLException {
-        if(month.length() == 1){
-            month = "0" + month;
-        }
-
-        if(date.length() == 1){
-            date = "0" + date;
-        }
-
-        ArrayList<Restaurant> correspondingRestaurants = new ArrayList<>();
-
-        ArrayList<Order> validOrders = Order.getOrdersFromRestServer(month, date);
-
-        for(Order o: validOrders){
-            String first_menu = o.getOrderItems().get(0);
-            for(Restaurant r: restaurants){
-                Menu[] menu_list  = r.getMenu();
-                for(Menu m: menu_list){
-                    if(m.getName().equals(first_menu)){
-                        correspondingRestaurants.add(r);
-                    }
-                }
-            }
-        }
-
-        return correspondingRestaurants;
-    }
 
 
     public ArrayList<String> getOrderItems() {
@@ -335,8 +336,11 @@ public class Order {
 
         ArrayList<Order> result = Order.getOrdersFromRestServer("04","15");
 
-        Restaurant[] restaurants = Restaurant.getRestaurantsFromRestServer(new URL(Restaurant.restaurantUrl));
-        ArrayList<Restaurant> correspondingRestaurants = Order.findRestaurant(restaurants,"04","15");
+        ArrayList<Restaurant> correspondingRestaurants = new ArrayList<>();
+
+        for(int i = 0 ; i < result.size(); i ++) {
+            correspondingRestaurants.add(result.get(i).findRestaurant());
+        }
 
         int count = 0;
         int count_2 = 0;
@@ -353,11 +357,13 @@ public class Order {
         System.out.println(count_2);
 
 
-        System.out.println(isValidCreditCardNumber("5102312041208609"));
+        //System.out.println(isValidCreditCardNumber("5102312041208609"));
     }
 
 
 }
+
+
 
 
 /*

@@ -15,7 +15,9 @@ import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class NoFlyZone {
+    private static final Restaurant[] INSTANCE = null;
     public static String noFlyZoneUrl = "https://ilp-rest.azurewebsites.net/noFlyZones";
+    public static NoFlyZone[] getINSTANCE() throws MalformedURLException {  return getNoFlyZonesFromRestServer(new URL(noFlyZoneUrl)); }
 
     private String name;
 
@@ -38,7 +40,6 @@ public class NoFlyZone {
 
         for(int i = 0 ; i < this.rawCoordinates.length; i ++){
             this.noFlyZoneCoordinates.add(new LngLat(rawCoordinates[i][0], rawCoordinates[i][1]));
-
 
         }
     }
@@ -82,7 +83,7 @@ public class NoFlyZone {
     }
 
     public static void main(String[] args) throws MalformedURLException {
-        NoFlyZone[] nfzs = getNoFlyZonesFromRestServer(new URL(NoFlyZone.noFlyZoneUrl));
+        NoFlyZone[] nfzs = NoFlyZone.getINSTANCE();
 
 
 

@@ -16,9 +16,9 @@ import java.util.ArrayList;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Restaurant {
 
-    private static final Restaurant[] INSTANCE = new Restaurant[];
-    private String restaurantUrl = "https://ilp-rest.azurewebsites.net/restaurants";
-    public static Restaurant[] getINSTANCE(){  return INSTANCE; }
+    private static final Restaurant[] INSTANCE = null;
+    private static String restaurantUrl = "https://ilp-rest.azurewebsites.net/restaurants";
+    public static Restaurant[] getINSTANCE() throws MalformedURLException {  return getRestaurantsFromRestServer(new URL(restaurantUrl)); }
 
     /**
      * The name and coordinate of the restaurant and an array of its pizzas available
