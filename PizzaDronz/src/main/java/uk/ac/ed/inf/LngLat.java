@@ -8,6 +8,7 @@ import java.awt.geom.Path2D;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Comparator;
 
 
 /**
@@ -15,7 +16,7 @@ import java.util.ArrayList;
  */
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class LngLat {
+public class LngLat implements Comparable<LngLat> {
 
 
     /**
@@ -23,6 +24,11 @@ public class LngLat {
      */
     private double lng;
     private double lat;
+    private LngLat previousPosition;
+    private double f;
+    private double g;
+    private double h;
+
 
 
 
@@ -35,6 +41,10 @@ public class LngLat {
     public LngLat(@JsonProperty("longitude")double lng, @JsonProperty("latitude")double lat){
         this.lng = lng;
         this.lat = lat;
+
+        this.f = 0;
+        this.g = 0;
+        this.h = 0;
 
     }
 
@@ -149,6 +159,8 @@ public class LngLat {
     }
 
 
+
+
     public double getLng() {
         return this.lng;
     }
@@ -157,10 +169,37 @@ public class LngLat {
         return this.lat;
     }
 
+    public LngLat getPreviousPosition() {
+        return previousPosition;
+    }
 
+    public double getF() {
+        return f;
+    }
 
+    public double getG() {
+        return g;
+    }
 
+    public double getH() {
+        return h;
+    }
 
+    public void setPreviousPosition(LngLat previousPosition) {
+        this.previousPosition = previousPosition;
+    }
+
+    public void setF(double f) {
+        this.f = f;
+    }
+
+    public void setG(double g) {
+        this.g = g;
+    }
+
+    public void setH(double h) {
+        this.h = h;
+    }
 
     public static void main(String[] args) throws MalformedURLException {
         NoFlyZone[] noFlyZones = NoFlyZone.getINSTANCE();
@@ -172,6 +211,18 @@ public class LngLat {
     }
 
 
+    @Override
+    public int compareTo(LngLat o) {
+        if(this.getF() < o.getF()){
+            return -1;
+        }
+        else if(this.getF() > o.getF()){
+            return 1;
+        }
+        else{
+            return 0;
+        }
+    }
 }
 
 
