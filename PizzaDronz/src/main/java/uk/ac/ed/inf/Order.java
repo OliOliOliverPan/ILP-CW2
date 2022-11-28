@@ -22,11 +22,12 @@ public class Order implements Comparable<Order>{
     private String creditCardNumber;
     private String creditCardExpiry;
     private String cvv;
-    private int priceTotalInPence;
+    private int priceTotalInPence; // price of the order extracted from REST
     private ArrayList<String> orderItems;
 
     private Restaurant correspondingRestaurant;
     private LngLat correspondingRestaurantCoordinate;
+    private int calculatedOrderCost; // calculated price of the order
 
     private OrderOutcome orderStatus;
 
@@ -45,6 +46,7 @@ public class Order implements Comparable<Order>{
 
         this.correspondingRestaurant = null;
         this.correspondingRestaurantCoordinate = null;
+        this.calculatedOrderCost = 100; // the delivery cost if (initially assume the order is valid)
     }
 
 
@@ -97,9 +99,9 @@ public class Order implements Comparable<Order>{
             else if(o.getCvv().length() != 3){
                 result = OrderOutcome.InvalidCvv;
             }
-            else if(o.getPriceTotalInPence() % 100 != 0){ // what if using deliveryCost obtain different answer as o.priceTotalInPence ?
-                result = OrderOutcome.InvalidTotal;
-            }
+//            else if((getDeliveryCost(o) != -1) && (getDeliveryCost(o) != o.getPriceTotalInPence())){
+//                result = OrderOutcome.InvalidTotal;
+//            }
 
             else if ((o.getOrderNo().length() != 8) || (o.getCustomer().length() < 1)){
                 result = OrderOutcome.Invalid;
@@ -167,7 +169,7 @@ public class Order implements Comparable<Order>{
                         currentRestaurant = r;
                         order.correspondingRestaurant = r;
                         order.correspondingRestaurantCoordinate = r.getCoordinate();
-                        order.orderStatus = OrderOutcome.ValidButNotDelivered;
+                        order.calculatedOrderCost += m.getPriceInPence();
 
                         if (restaurant == null) {
                             restaurant = r;
@@ -179,12 +181,20 @@ public class Order implements Comparable<Order>{
 
             if (!foundInRestaurant) {
                 result = OrderOutcome.InvalidPizzaNotDefined;
+                break;
             } else if ((restaurant != null) && (!currentRestaurant.equals(restaurant))) {
                 result = OrderOutcome.InvalidPizzaCombinationMultipleSuppliers;
-
+                break;
             }
+
         }
 
+        if(order.calculatedOrderCost != order.priceTotalInPence){
+            result = OrderOutcome.InvalidTotal;
+        }
+
+
+        order.orderStatus = result;
 
         return result;
     }
@@ -193,58 +203,61 @@ public class Order implements Comparable<Order>{
 
 
 
-    /**
-     * Count the total cost of a given order in pence, including an extra delivery cost of 100p
-     *
-     * @param order an order whose items are to be calculated the total cost with
-     *
-     * @return the total cost of the input order plus 100p delivery cost
-     *
-     * @throws IllegalArgumentException if there is no item in the input order
-     * @throws IllegalArgumentException if the number of pizzas in the order exceeds the maximum capacity of the drone (4)
-     * @throws IllegalArgumentException if an item in the order cannot be found in any of the given restaurant
-     * @throws InvalidPizzaCombinationException if the order contains items that cannot be delivered from the same restaurant
-     */
-    public static int getDeliveryCost( Order order) throws InvalidPizzaCombinationException, MalformedURLException {
-
-        Restaurant[] restaurants = Restaurant.getINSTANCE();
-        ArrayList<String> orderItems = order.getOrderItems();
-
-        if(Order.isValidOrder(order) == OrderOutcome.InvalidPizzaCount){
-            throw new IllegalArgumentException("The order is invalid since the number of items is either 0 or exceeds the maximum capacity of drone");
-        }
-
-        else if(Order.isValidOrder(order) == OrderOutcome.InvalidPizzaNotDefined){
-            throw new IllegalArgumentException("There's item cannot be found in any restaurant");
-        }
-
-        else if(Order.isValidOrder(order) == OrderOutcome.InvalidPizzaCombinationMultipleSuppliers){
-            throw new InvalidPizzaCombinationException("The items in the order list cannot be delivered from the same restaurant");
-        }
-
-        //if above exceptions are not thrown, the order is valid, and we will find the total cost
-
-        int totalCost = 0;
-
-        // For each ordered item, find its menu among all restaurants and its price in pence,
-        // then add its cost to the total cost
-        for(String s: orderItems){
-            for(Restaurant r: restaurants){
-                for(Menu m: r.getMenu()){
-                    if(m.getName().equals((s))){
-                        totalCost += m.getPriceInPence();
-                    }
-                }
-            }
-
-
-        }
-
-        // Add the delivery cost
-        return totalCost + 100;
-
-
-    }
+//    /**
+//     * Count the total cost of a given order in pence, including an extra delivery cost of 100p
+//     *
+//     * @param order an order whose items are to be calculated the total cost with
+//     *
+//     * @return the total cost of the input order plus 100p delivery cost
+//     *
+//     * @throws IllegalArgumentException if there is no item in the input order
+//     * @throws IllegalArgumentException if the number of pizzas in the order exceeds the maximum capacity of the drone (4)
+//     * @throws IllegalArgumentException if an item in the order cannot be found in any of the given restaurant
+//     * @throws InvalidPizzaCombinationException if the order contains items that cannot be delivered from the same restaurant
+//     */
+//    public static int getDeliveryCost( Order order) throws InvalidPizzaCombinationException, MalformedURLException {
+//
+//        Restaurant[] restaurants = Restaurant.getINSTANCE();
+//        ArrayList<String> orderItems = order.getOrderItems();
+//
+//        if(Order.isValidOrder(order) == OrderOutcome.InvalidPizzaCount){
+//            //throw new IllegalArgumentException("The order is invalid since the number of items is either 0 or exceeds the maximum capacity of drone");
+//            return -1;
+//        }
+//
+//        else if(Order.isValidOrder(order) == OrderOutcome.InvalidPizzaNotDefined){
+//            //throw new IllegalArgumentException("There's item cannot be found in any restaurant");
+//            return -1;
+//        }
+//
+//        else if(Order.isValidOrder(order) == OrderOutcome.InvalidPizzaCombinationMultipleSuppliers){
+//            //throw new InvalidPizzaCombinationException("The items in the order list cannot be delivered from the same restaurant");
+//            return -1;
+//        }
+//
+//        //if above exceptions are not thrown, the order is valid, and we will find the total cost
+//
+//        int totalCost = 0;
+//
+//        // For each ordered item, find its menu among all restaurants and its price in pence,
+//        // then add its cost to the total cost
+//        for(String s: orderItems){
+//            for(Restaurant r: restaurants){
+//                for(Menu m: r.getMenu()){
+//                    if(m.getName().equals((s))){
+//                        totalCost += m.getPriceInPence();
+//                    }
+//                }
+//            }
+//
+//
+//        }
+//
+//        // Add the delivery cost
+//        return totalCost + 100;
+//
+//
+//    }
 
 
 
@@ -336,7 +349,7 @@ public class Order implements Comparable<Order>{
 
     public static void main(String[] args) throws InvalidPizzaCombinationException, MalformedURLException {
 
-        ArrayList<Order> result = Order.getOrdersFromRestServer("04","15");
+        ArrayList<Order> result = Order.getOrdersFromRestServer("05","31");
 
         ArrayList<Restaurant> correspondingRestaurants = new ArrayList<>();
         ArrayList<LngLat> correspondingRestaurantsCoordinate = new ArrayList<>();
