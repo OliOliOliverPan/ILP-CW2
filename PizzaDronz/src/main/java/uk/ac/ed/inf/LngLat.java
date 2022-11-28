@@ -145,7 +145,9 @@ public class LngLat implements Comparable<LngLat> {
     }
 
 
-    public boolean inNoFlyZone(NoFlyZone[] noFlyZones){
+    public boolean inNoFlyZone() throws MalformedURLException {
+
+        NoFlyZone[] noFlyZones = NoFlyZone.getINSTANCE();
 
         boolean inNFZ = false;
         for(NoFlyZone nfz: noFlyZones) {
@@ -159,7 +161,18 @@ public class LngLat implements Comparable<LngLat> {
     }
 
 
-
+    @Override
+    public int compareTo(LngLat o) {
+        if(this.getF() < o.getF()){
+            return -1;
+        }
+        else if(this.getF() > o.getF()){
+            return 1;
+        }
+        else{
+            return 0;
+        }
+    }
 
     public double getLng() {
         return this.lng;
@@ -206,23 +219,11 @@ public class LngLat implements Comparable<LngLat> {
 
         LngLat point = new LngLat(-3.1882,55.9447);
 
-        System.out.println(point.inNoFlyZone(noFlyZones));
+        System.out.println(point.inNoFlyZone());
 
     }
 
 
-    @Override
-    public int compareTo(LngLat o) {
-        if(this.getF() < o.getF()){
-            return -1;
-        }
-        else if(this.getF() > o.getF()){
-            return 1;
-        }
-        else{
-            return 0;
-        }
-    }
 }
 
 

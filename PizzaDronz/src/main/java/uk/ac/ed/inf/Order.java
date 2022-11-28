@@ -14,7 +14,7 @@ import java.util.*;
  * Class representing the order
  */
 
-public class Order {
+public class Order implements Comparable<Order>{
 
     private String orderNo;
     private String orderDate;
@@ -24,6 +24,11 @@ public class Order {
     private String cvv;
     private int priceTotalInPence;
     private ArrayList<String> orderItems;
+
+    private Restaurant correspondingRestaurant;
+    private LngLat correspondingRestaurantCoordinate;
+
+    private OrderOutcome orderStatus;
 
 
 
@@ -37,6 +42,9 @@ public class Order {
         this.cvv = cvv;
         this.priceTotalInPence = priceTotalInPence;
         this.orderItems = orderItems;
+
+        this.correspondingRestaurant = null;
+        this.correspondingRestaurantCoordinate = null;
     }
 
 
@@ -97,12 +105,13 @@ public class Order {
                 result = OrderOutcome.Invalid;
             }
             else{
-                result = Order.isValidOrder(o.getOrderItems());
+                result = Order.isValidOrder(o);
             }
 
 
 
             if(result == OrderOutcome.ValidButNotDelivered){
+
                 validOrders.add(o);
             }
             else{
@@ -111,16 +120,7 @@ public class Order {
 
         }
 
-        Collections.sort(validOrders, (o1, o2) -> {
-            try {
-                return Double.valueOf(Drone.START_POSITION.distanceTo(o1.findRestaurant().getCoordinate())).
-                        compareTo(Drone.START_POSITION.distanceTo(o2.findRestaurant().getCoordinate()));
-
-
-            } catch (MalformedURLException e) {
-                throw new RuntimeException(e);
-            }
-        });
+        Collections.sort(validOrders);
 
         return validOrders;
     }
@@ -129,9 +129,11 @@ public class Order {
 
 
     // helper function for determining if the detail of an order is valid
-    public static OrderOutcome isValidOrder( List<String> orderItems) throws MalformedURLException {
+    public static OrderOutcome isValidOrder( Order order) throws MalformedURLException {
 
         Restaurant[] restaurants = Restaurant.getINSTANCE();
+
+        ArrayList<String> orderItems= order.getOrderItems();
 
         // the returned value initialized to valid, and will be changed
         // only when any invalid order criterion is satisfied
@@ -163,9 +165,13 @@ public class Order {
                     if (m.getName().equals((s))) {
                         foundInRestaurant = true;
                         currentRestaurant = r;
+                        order.correspondingRestaurant = r;
+                        order.correspondingRestaurantCoordinate = r.getCoordinate();
+                        order.orderStatus = OrderOutcome.ValidButNotDelivered;
 
                         if (restaurant == null) {
                             restaurant = r;
+
                         }
                     }
                 }
@@ -175,6 +181,7 @@ public class Order {
                 result = OrderOutcome.InvalidPizzaNotDefined;
             } else if ((restaurant != null) && (!currentRestaurant.equals(restaurant))) {
                 result = OrderOutcome.InvalidPizzaCombinationMultipleSuppliers;
+
             }
         }
 
@@ -189,7 +196,7 @@ public class Order {
     /**
      * Count the total cost of a given order in pence, including an extra delivery cost of 100p
      *
-     * @param orderItems a list of items to be calculated the total cost with
+     * @param order an order whose items are to be calculated the total cost with
      *
      * @return the total cost of the input order plus 100p delivery cost
      *
@@ -198,20 +205,20 @@ public class Order {
      * @throws IllegalArgumentException if an item in the order cannot be found in any of the given restaurant
      * @throws InvalidPizzaCombinationException if the order contains items that cannot be delivered from the same restaurant
      */
-    public static int getDeliveryCost( String... orderItems) throws InvalidPizzaCombinationException, MalformedURLException {
+    public static int getDeliveryCost( Order order) throws InvalidPizzaCombinationException, MalformedURLException {
 
         Restaurant[] restaurants = Restaurant.getINSTANCE();
-        List<String> orderItemList = Arrays.stream(orderItems).toList();
+        ArrayList<String> orderItems = order.getOrderItems();
 
-        if(Order.isValidOrder(orderItemList) == OrderOutcome.InvalidPizzaCount){
+        if(Order.isValidOrder(order) == OrderOutcome.InvalidPizzaCount){
             throw new IllegalArgumentException("The order is invalid since the number of items is either 0 or exceeds the maximum capacity of drone");
         }
 
-        else if(Order.isValidOrder(orderItemList) == OrderOutcome.InvalidPizzaNotDefined){
+        else if(Order.isValidOrder(order) == OrderOutcome.InvalidPizzaNotDefined){
             throw new IllegalArgumentException("There's item cannot be found in any restaurant");
         }
 
-        else if(Order.isValidOrder(orderItemList) == OrderOutcome.InvalidPizzaCombinationMultipleSuppliers){
+        else if(Order.isValidOrder(order) == OrderOutcome.InvalidPizzaCombinationMultipleSuppliers){
             throw new InvalidPizzaCombinationException("The items in the order list cannot be delivered from the same restaurant");
         }
 
@@ -274,28 +281,21 @@ public class Order {
 
 
 
-    public Restaurant findRestaurant() throws MalformedURLException {
 
+    @Override
+    public int compareTo(Order o) {
 
-        Restaurant[] restaurants = Restaurant.getINSTANCE();
-
-        Restaurant correspondingRestaurant = null;
-
-        String first_menu = this.getOrderItems().get(0);
-        for(Restaurant r: restaurants){
-            Menu[] menu_list  = r.getMenu();
-            for(Menu m: menu_list){
-                if(m.getName().equals(first_menu)){
-                        correspondingRestaurant = r;
-                        break;
-                    }
-                }
+            if(Drone.START_POSITION.distanceTo(this.correspondingRestaurantCoordinate) < Drone.START_POSITION.distanceTo(o.correspondingRestaurantCoordinate)){
+                return -1;
+            }
+            else if(Drone.START_POSITION.distanceTo(this.correspondingRestaurantCoordinate) > Drone.START_POSITION.distanceTo(o.correspondingRestaurantCoordinate)){
+                return 1;
+            }
+            else{
+                return 0;
             }
 
-        return correspondingRestaurant;
     }
-
-
 
 
     public ArrayList<String> getOrderItems() {
@@ -330,16 +330,20 @@ public class Order {
         return this.customer;
     }
 
-
+    public LngLat getCorrespondingRestaurantCoordinate() {
+        return correspondingRestaurantCoordinate;
+    }
 
     public static void main(String[] args) throws InvalidPizzaCombinationException, MalformedURLException {
 
         ArrayList<Order> result = Order.getOrdersFromRestServer("04","15");
 
         ArrayList<Restaurant> correspondingRestaurants = new ArrayList<>();
+        ArrayList<LngLat> correspondingRestaurantsCoordinate = new ArrayList<>();
 
         for(int i = 0 ; i < result.size(); i ++) {
-            correspondingRestaurants.add(result.get(i).findRestaurant());
+            correspondingRestaurants.add(result.get(i).correspondingRestaurant);
+            correspondingRestaurantsCoordinate.add(result.get(i).correspondingRestaurantCoordinate);
         }
 
         int count = 0;
@@ -362,6 +366,8 @@ public class Order {
 
 
 }
+
+
 
 
 

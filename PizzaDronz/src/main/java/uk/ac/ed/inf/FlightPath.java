@@ -28,14 +28,22 @@ public class FlightPath {
         this.deliveryRestaurantList = new ArrayList<>();
         ArrayList<Order> validOrders = Order.getOrdersFromRestServer(month, date);
         for(Order o: validOrders){
-            this.deliveryRestaurantList.add(o.findRestaurant().getCoordinate());
+            this.deliveryRestaurantList.add(o.getCorrespondingRestaurantCoordinate());
         }
 
     }
 
+//    public FlightPath(String month, String date, LngLat currentPosition, int remainingBattery){
+//        this.month = month;
+//        this.date = date;
+//        this.currentPosition = currentPosition;
+//        this.remainingBattery = remainingBattery;
+//    }
 
 
-    public Stack<LngLat> aStarPathFinding(LngLat destination){
+
+
+    public Stack<LngLat> aStarPathFinding(LngLat destination) throws MalformedURLException {
         ArrayList<LngLat> openTable = new ArrayList<>();
         ArrayList<LngLat> closeTable = new ArrayList<>();
         Stack<LngLat> pathStack = new Stack<>();
@@ -45,20 +53,27 @@ public class FlightPath {
         LngLat currentPoint = new LngLat(this.currentPosition.getLng(), this.currentPosition.getLat());
         boolean flag = true;
 
+        //final coordinate where the drone arrives at, which is less than 0.00015 degrees to the goal restaurant
+        LngLat final_arrived_coordinate = null;
 
         while(flag){
+            openTable.clear();
+            closeTable.clear();
+
+
             for(Direction d: Direction.values()){
-                LngLat tempPoint = this.currentPosition.nextPosition(d);
-                if(tempPoint.inNoFlyZone(this.noFlyZones)){
+                LngLat tempPoint = currentPoint.nextPosition(d);
+                if(tempPoint.inNoFlyZone()){
                     continue;
                 }
-                else{
-                    if(tempPoint.equals(destination)){
+              else{
+                    if(tempPoint.closeTo(destination)){
+                        final_arrived_coordinate = tempPoint;
                         flag = false;
-                        destination.setPreviousPosition(currentPoint);
+                        final_arrived_coordinate.setPreviousPosition(currentPoint);
                         break;
                     }
-                    tempPoint.setG(currentPoint.getG() + currentPoint.distanceTo(tempPoint));
+                    tempPoint.setG(currentPoint.getG() + 0.00015);
                     tempPoint.setH(tempPoint.distanceTo(destination));
                     tempPoint.setF(tempPoint.getG() + tempPoint.getH());
 
@@ -100,9 +115,12 @@ public class FlightPath {
             closeTable.add(currentPoint);
             Collections.sort(openTable);
             currentPoint = openTable.get(0);
+            System.out.println("the current chosen point has coordinate" + currentPoint.getLng() + " and "+ currentPoint.getLat());
+
+
         } //end while
 
-        LngLat node = destination;
+        LngLat node = final_arrived_coordinate;
         while(node.getPreviousPosition() != null){
             pathStack.push(node);
             node = node.getPreviousPosition();
@@ -114,17 +132,23 @@ public class FlightPath {
     public static void main(String[] args) throws InvalidPizzaCombinationException, MalformedURLException {
         FlightPath fp = new FlightPath("04","15",Drone.START_POSITION, 2000);
 
-        LngLat first_restaurant = fp.deliveryRestaurantList.get(0);
-        Stack<LngLat> path = fp.aStarPathFinding(first_restaurant);
+        LngLat first_restaurant_coordinate = new LngLat(-3.202541470527649,55.943284737579376);
+        System.out.println("Location of first restaurant:" + first_restaurant_coordinate.getLng() + " and "+first_restaurant_coordinate.getLat());
+
+        Stack<LngLat> path = fp.aStarPathFinding(first_restaurant_coordinate);
+
+        System.out.println("The length of the shortest path to the shortest restaurant is "+ path.size());
 
         if(path == null){
             System.out.println("No accessible route");
         }else{
             while(! path.isEmpty()){
-                System.out.println(path.pop());
+                LngLat hahaha = path.pop();
+                System.out.println(hahaha.getLng() + " and "+hahaha.getLat());
             }
             System.out.println();
         }
+        System.out.println(new LngLat(-3.1911798928079014,55.94546984275254).closeTo(new LngLat(-3.1912869215011597,55.945535152517735)));
 
     }
 

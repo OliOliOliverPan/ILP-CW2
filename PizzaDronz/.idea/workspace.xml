@@ -6,12 +6,12 @@
   <component name="ChangeListManager">
     <list default="true" id="8e61e2e2-2dc7-4d81-b888-90b21aacd304" name="Changes" comment="Roughly finished up basic functions">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/uk/ac/ed/inf/FlightPath.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/uk/ac/ed/inf/FlightPath.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/uk/ac/ed/inf/LngLat.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/uk/ac/ed/inf/LngLat.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/uk/ac/ed/inf/Order.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/uk/ac/ed/inf/Order.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/uk/ac/ed/inf/Restaurant.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/uk/ac/ed/inf/Restaurant.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/uk/ac/ed/inf/FlightPath.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/uk/ac/ed/inf/FlightPath.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/target/classes/uk/ac/ed/inf/LngLat.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/uk/ac/ed/inf/LngLat.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/target/classes/uk/ac/ed/inf/Order.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/uk/ac/ed/inf/Order.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/uk/ac/ed/inf/Restaurant.class" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -54,7 +54,20 @@
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;
   }
 }</component>
-  <component name="RunManager" selected="Application.Order">
+  <component name="RunManager" selected="Application.FlightPath">
+    <configuration name="FlightPath" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="uk.ac.ed.inf.FlightPath" />
+      <module name="PizzaDronz" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="uk.ac.ed.inf.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="LngLat" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="uk.ac.ed.inf.LngLat" />
       <module name="PizzaDronz" />
@@ -74,19 +87,6 @@
       <extension name="coverage">
         <pattern>
           <option name="PATTERN" value="uk.ac.ed.inf.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="Restaurant" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="src.main.java.uk.ac.ed.inf.Restaurant" />
-      <module name="PizzaDronz" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="src.main.java.uk.ac.ed.inf.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
@@ -122,11 +122,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Application.FlightPath" />
         <item itemvalue="Application.Order" />
         <item itemvalue="Application.LngLat" />
         <item itemvalue="Application.uk.ac.ed.inf.Restaurant" />
         <item itemvalue="Application.TestClient" />
-        <item itemvalue="Application.Restaurant" />
       </list>
     </recent_temporary>
   </component>
