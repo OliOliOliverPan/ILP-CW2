@@ -298,15 +298,15 @@ public class Order implements Comparable<Order>{
     @Override
     public int compareTo(Order o) {
 
-            if(Drone.START_POSITION.distanceTo(this.correspondingRestaurantCoordinate) < Drone.START_POSITION.distanceTo(o.correspondingRestaurantCoordinate)){
-                return -1;
-            }
-            else if(Drone.START_POSITION.distanceTo(this.correspondingRestaurantCoordinate) > Drone.START_POSITION.distanceTo(o.correspondingRestaurantCoordinate)){
-                return 1;
-            }
-            else{
-                return 0;
-            }
+        if(Drone.START_POSITION.distanceTo(this.correspondingRestaurantCoordinate) < Drone.START_POSITION.distanceTo(o.correspondingRestaurantCoordinate)){
+            return -1;
+        }
+        else if(Drone.START_POSITION.distanceTo(this.correspondingRestaurantCoordinate) > Drone.START_POSITION.distanceTo(o.correspondingRestaurantCoordinate)){
+            return 1;
+        }
+        else{
+            return 0;
+        }
 
     }
 
@@ -343,13 +343,24 @@ public class Order implements Comparable<Order>{
         return this.customer;
     }
 
+    public Restaurant getCorrespondingRestaurant() { return correspondingRestaurant;}
+
     public LngLat getCorrespondingRestaurantCoordinate() {
         return correspondingRestaurantCoordinate;
     }
+    public OrderOutcome getOrderStatus(){return orderStatus;}
+
+    public void setOrderStatus(OrderOutcome orderStatus){ this.orderStatus = orderStatus; }
+
+
+
+
+
+
 
     public static void main(String[] args) throws InvalidPizzaCombinationException, MalformedURLException {
 
-        ArrayList<Order> result = Order.getOrdersFromRestServer("05","31");
+        ArrayList<Order> result = Order.getOrdersFromRestServer("04","15");
 
         ArrayList<Restaurant> correspondingRestaurants = new ArrayList<>();
         ArrayList<LngLat> correspondingRestaurantsCoordinate = new ArrayList<>();
@@ -359,19 +370,15 @@ public class Order implements Comparable<Order>{
             correspondingRestaurantsCoordinate.add(result.get(i).correspondingRestaurantCoordinate);
         }
 
-        int count = 0;
-        int count_2 = 0;
-        for(Order o: result) {
-            System.out.println(o.orderNo);
-            count ++;
-        }
-        for (Restaurant r: correspondingRestaurants){
-            System.out.println(r.getName());
-            count_2 ++;
-        }
 
-        System.out.println(count);
-        System.out.println(count_2);
+        for(Order o: result) {
+            System.out.println(o.getCorrespondingRestaurant().getName());
+        }
+//        for (Restaurant r: correspondingRestaurants){
+//            System.out.println(r.getName());
+//
+//        }
+
 
 
         //System.out.println(isValidCreditCardNumber("5102312041208609"));
