@@ -186,7 +186,7 @@ public class LngLat implements Comparable<LngLat> {
                         (point.lat - magnifiedCoordinate.lat) * (point.lat - magnifiedCoordinate.lat);
             }
         }
-        return shortestDistanceSquared < (0.00015 * 100000) * (0.00015 * 100000) ;
+        return shortestDistanceSquared < 10;
     }
 
 
@@ -243,14 +243,14 @@ public class LngLat implements Comparable<LngLat> {
         this.h = h;
     }
 
-    public static void main(String[] args) throws MalformedURLException {
-        NoFlyZone[] noFlyZones = NoFlyZone.getINSTANCE();
-
-        LngLat point = new LngLat(-3.1882,55.9447);
-
-        System.out.println(point.inNoFlyZone());
-
-    }
+//    public static void main(String[] args) throws MalformedURLException {
+//        NoFlyZone[] noFlyZones = NoFlyZone.getINSTANCE();
+//
+//        LngLat point = new LngLat(-3.1882,55.9447);
+//
+//        System.out.println(point.inNoFlyZone());
+//
+//    }
 
 
 }

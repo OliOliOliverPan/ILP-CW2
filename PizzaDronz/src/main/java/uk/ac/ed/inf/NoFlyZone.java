@@ -112,38 +112,38 @@ public class NoFlyZone {
         return noFlyZoneArea;
     }
 
-    public static void main(String[] args) throws MalformedURLException {
-        System.out.println(Math.atan2(55.94284650540911 - 55.94402412577528, -3.1899887323379517 + 3.190578818321228));
-
-
-        NoFlyZone[] nfzs = NoFlyZone.getINSTANCE();
-
-
-
-//        for(int j = 0; j < nfzs.length; j ++) {
-//            NoFlyZone first_nfz = nfzs[j];
-//            System.out.println(first_nfz.name);
+//    public static void main(String[] args) throws MalformedURLException {
+//        System.out.println(Math.atan2(55.94284650540911 - 55.94402412577528, -3.1899887323379517 + 3.190578818321228));
 //
-//            for (int i = 0; i < first_nfz.getNoFlyZoneCoordinates().size(); i++) {
-//                System.out.println(first_nfz.getNoFlyZoneCoordinates().get(i).getLng());
-//                System.out.println(first_nfz.getNoFlyZoneCoordinates().get(i).getLat());
+//
+//        NoFlyZone[] nfzs = NoFlyZone.getINSTANCE();
+//
+//
+//
+////        for(int j = 0; j < nfzs.length; j ++) {
+////            NoFlyZone first_nfz = nfzs[j];
+////            System.out.println(first_nfz.name);
+////
+////            for (int i = 0; i < first_nfz.getNoFlyZoneCoordinates().size(); i++) {
+////                System.out.println(first_nfz.getNoFlyZoneCoordinates().get(i).getLng());
+////                System.out.println(first_nfz.getNoFlyZoneCoordinates().get(i).getLat());
+////            }
+////
+////            System.out.println();
+////        }
+//
+//
+//        for(NoFlyZone n: nfzs){
+//            for(LngLat temp: n.noFlyZoneEdgePoints){
+//                System.out.println(temp.getLng());
+//                System.out.println(temp.getLat());
 //            }
-//
-//            System.out.println();
 //        }
-
-
-        for(NoFlyZone n: nfzs){
-            for(LngLat temp: n.noFlyZoneEdgePoints){
-                System.out.println(temp.getLng());
-                System.out.println(temp.getLat());
-            }
-        }
-
-        //System.out.println(count);
-
-
-
-    }
+//
+//        //System.out.println(count);
+//
+//
+//
+//    }
 
 }

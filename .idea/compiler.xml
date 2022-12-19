@@ -13,4 +13,9 @@
       <module name="PizzaDronz" target="18" />
     </bytecodeTargetLevel>
   </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="PizzaDronz" options="-Xlint:all,-classfile" />
+    </option>
+  </component>
 </project>

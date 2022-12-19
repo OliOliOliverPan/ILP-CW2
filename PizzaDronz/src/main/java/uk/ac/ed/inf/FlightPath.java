@@ -5,40 +5,44 @@ import java.util.*;
 
 public class FlightPath {
 
-    private String month;
-    private String date;
     private LngLat currentPosition;
-    private int remainingBattery;
 
     private NoFlyZone[] noFlyZones;
     private CentralArea centralArea;
 
-    private ArrayList<Order> validOrders;
 
-    public FlightPath(String month, String date, LngLat currentPosition, int remainingBattery) throws MalformedURLException, InvalidPizzaCombinationException {
-        this.month = month;
-        this.date = date;
+    private Order validOrder;
+
+    private ArrayList<LngLat> route;
+    private ArrayList<Double> angles;
+
+    //time of making a step since the route planning of the order starts
+    private ArrayList<Long> eachStepTime;
+
+    private long totalTime;
+
+    public FlightPath( LngLat currentPosition, Order validOrder) throws MalformedURLException {
+
         this.currentPosition = currentPosition;
-        this.remainingBattery = remainingBattery;
-
         this.noFlyZones = NoFlyZone.getINSTANCE();
         this.centralArea = CentralArea.getInstance();
+        this.validOrder = validOrder;
 
-        this.validOrders = Order.getOrdersFromRestServer(month, date);
+        this.angles = new ArrayList<>();
+        this.route = new ArrayList<>();
+        this.eachStepTime = new ArrayList<>();
+        this.totalTime = 0;
 
     }
 
-//    public FlightPath(String month, String date, LngLat currentPosition, int remainingBattery){
-//        this.month = month;
-//        this.date = date;
-//        this.currentPosition = currentPosition;
-//        this.remainingBattery = remainingBattery;
-//    }
 
 
+    public void aStarPathFinding(Order validOrder) throws MalformedURLException {
+        long tStart = System.currentTimeMillis();
+
+        LngLat destination = validOrder.getCorrespondingRestaurantCoordinate();
 
 
-    public Stack<LngLat> aStarPathFinding(LngLat destination) throws MalformedURLException {
         ArrayList<LngLat> openTable = new ArrayList<>();
         ArrayList<LngLat> closeTable = new ArrayList<>();
         Stack<LngLat> pathStack = new Stack<>();
@@ -70,7 +74,7 @@ public class FlightPath {
 
         while(flag){
             openTable.clear();
-            closeTable.clear();
+            //closeTable.clear();
 
 
             for(Direction d: Direction.values()){
@@ -91,6 +95,16 @@ public class FlightPath {
                             final_arrived_coordinate = tempPoint;
                             flag = false;
                             final_arrived_coordinate.setPreviousPosition(currentPoint);
+
+                            this.eachStepTime.add(System.currentTimeMillis() - tStart);
+
+                            for(Direction di: Direction.values()){
+                                if(currentPoint.nextPosition(di).getLng() == tempPoint.getLng() &&
+                                        currentPoint.nextPosition(di).getLng() == tempPoint.getLng()){
+                                    this.angles.add(di.getAngle());
+                                    break;
+                                }
+                            }
                             break;
                         }
                         tempPoint.setG(currentPoint.getG() + 0.00015);
@@ -133,8 +147,16 @@ public class FlightPath {
             closeTable.add(currentPoint);
             Collections.sort(openTable);
             currentPoint = openTable.get(0);
-            //System.out.println("the current chosen point has coordinate" + currentPoint.getLng() + " and "+ currentPoint.getLat());
 
+            this.eachStepTime.add(System.currentTimeMillis() - tStart);
+
+            for(Direction di: Direction.values()){
+                if(currentPoint.getPreviousPosition().nextPosition(di).getLng() == currentPoint.getLng() &&
+                        currentPoint.getPreviousPosition().nextPosition(di).getLng() == currentPoint.getLng()){
+                    this.angles.add(di.getAngle());
+                    break;
+                }
+            }
 
         } //end while
 
@@ -144,82 +166,156 @@ public class FlightPath {
             node = node.getPreviousPosition();
         }
 
-        return pathStack;
+        while(!pathStack.isEmpty()){
+            this.route.add(pathStack.pop());
+        }
+
+        //number of steps to go to the restaurant
+        int toSteps = this.route.size();
+
+
+        //reverse the way to restaurant to obtain the way back to Appleton Tower
+
+        //get coordinate for each back step
+        for(int i = toSteps - 2; i >= 0; i--){
+            this.route.add(this.route.get(i));
+            this.eachStepTime.add(System.currentTimeMillis() - tStart);
+        }
+        this.route.add(Drone.START_POSITION);
+        this.eachStepTime.add(System.currentTimeMillis() - tStart);
+
+
+        //get directions for each back step
+        for(int i = 0; i < toSteps; i ++){
+            Double angle = this.angles.get(i);
+
+            //get the reversed direction
+            this.angles.add((angle + 180) % 360);
+
+        }
+
+
+        long tEnd = System.currentTimeMillis();
+
+        this.totalTime = tEnd - tStart;
+
+    }
+
+    public ArrayList<LngLat> getRoute() {
+        return route;
+    }
+
+    public ArrayList<Double> getAngles() {
+        return angles;
+    }
+
+    public ArrayList<Long> getEachStepTime() {
+        return eachStepTime;
+    }
+
+    public long getTotalTime() {
+        return totalTime;
     }
 
 
-    //planning the route for all orders of the day
-    public ArrayList<LngLat> planDailyRoute() throws MalformedURLException {
-        boolean enoughBattery = true;
 
-        ArrayList<LngLat> paths = new ArrayList<>();
 
-        //records each restaurant and corresponding shortest path from Appleton Tower to it
-        HashMap<String, ArrayList<LngLat>> restaurantPath = new HashMap<>();
-
-        for(Order o: this.validOrders){
-            boolean foundInMap = false;
-            Restaurant r = o.getCorrespondingRestaurant();
-
-            //records the round trip path for every single order
-            ArrayList<LngLat> wholePath = new ArrayList<>();
-
-            for(String rName: restaurantPath.keySet()) {
-                if (rName.equals(r.getName())) {
-                    wholePath = restaurantPath.get(rName);
-                    foundInMap = true;
+//planning the route for all orders of the day
+//    public ArrayList<LngLat> planDailyRoute() throws MalformedURLException {
+//        boolean enoughBattery = true;
 //
-                }
-            }
+//        ArrayList<LngLat> paths = new ArrayList<>();
+//
+//        //records each restaurant and corresponding shortest path from Appleton Tower to it
+//        HashMap<String, ArrayList<LngLat>> restaurantPath = new HashMap<>();
+//
+//        for(Order o: this.validOrders){
+//            boolean foundInMap = false;
+//            Restaurant r = o.getCorrespondingRestaurant();
+//
+//            //records the round trip path for every single order
+//            ArrayList<LngLat> wholePath = new ArrayList<>();
+//
+//            for(String rName: restaurantPath.keySet()) {
+//                if (rName.equals(r.getName())) {
+//                    wholePath = restaurantPath.get(rName);
+//                    foundInMap = true;
+////
+//                }
+//            }
+//
+//            if(!foundInMap) {
+//                Stack<LngLat> pathToRestaurant = this.aStarPathFinding(r.getCoordinate());
+//                Collections.reverse(pathToRestaurant);
+//                wholePath.addAll(pathToRestaurant);
+//                pathToRestaurant.pop();
+//                Collections.reverse(pathToRestaurant);
+//                wholePath.addAll(pathToRestaurant);
+//                wholePath.add(Drone.START_POSITION);
+//
+//                restaurantPath.put(r.getName(), wholePath);
+//            }
+//
+//            if(wholePath.size() + 2 <= this.remainingBattery){
+//
+//                paths.addAll(wholePath);
+//
+//                this.remainingBattery = this.remainingBattery - wholePath.size() - 2;
+//                o.setOrderStatus(OrderOutcome.Delivered);
+//
+//            }
+//            else{
+//                enoughBattery = false;
+//            }
+//
+//            if(!enoughBattery){
+//                break;
+//            }
+//        }
+//
+//        return paths;
+//    }
 
-            if(!foundInMap) {
-                Stack<LngLat> pathToRestaurant = this.aStarPathFinding(r.getCoordinate());
-                Collections.reverse(pathToRestaurant);
-                wholePath.addAll(pathToRestaurant);
-                pathToRestaurant.pop();
-                Collections.reverse(pathToRestaurant);
-                wholePath.addAll(pathToRestaurant);
-                wholePath.add(Drone.START_POSITION);
 
-                restaurantPath.put(r.getName(), wholePath);
-            }
 
-            if(wholePath.size() + 2 <= this.remainingBattery){
 
-                paths.addAll(wholePath);
 
-                this.remainingBattery = this.remainingBattery - wholePath.size() - 2;
-                o.setOrderStatus(OrderOutcome.Delivered);
+    public static void main(String[] args) throws MalformedURLException {
 
-            }
-            else{
-                enoughBattery = false;
-            }
+        ArrayList<Order> validOrders = Order.getOrdersFromRestServer("04","15");
+        Order first_order = validOrders.get(20);
+        FlightPath fp = new FlightPath(Drone.START_POSITION, first_order);
 
-            if(!enoughBattery){
-                break;
-            }
+
+
+//        for(Order o: fp.validOrders){
+//            System.out.println(o.getOrderStatus());
+//        }
+        fp.aStarPathFinding(first_order);
+        System.out.println(fp.route.size());
+        for(LngLat l: fp.route){
+            System.out.println(l.getLng());
+            System.out.println(l.getLat());
+        }
+        for(Double i: fp.angles){
+            System.out.println(i);
         }
 
-        return paths;
-    }
+        System.out.println(fp.route.get(fp.route.size() / 2 -1).getLng());
+        System.out.println(fp.route.get(fp.route.size() / 2 -1).getLat());
+        System.out.println(new LngLat(-3.193964,55.943924).closeTo(new LngLat(-3.1940174102783203,55.94390696616939)));
+//        System.out.println(fp.totalTime);
+//        for(long i:fp.eachStepTime){
+//            System.out.println(i);
+//        }
 
 
+//        while(!pathToRestaurant.isEmpty()){
+//            LngLat l = pathToRestaurant.pop();
+//            System.out.println(l.getLng());
+//            System.out.println(l.getLat());
+//        }
 
-
-
-    public static void main(String[] args) throws InvalidPizzaCombinationException, MalformedURLException {
-
-        FlightPath fp = new FlightPath("04","15",Drone.START_POSITION, 2000);
-
-        ArrayList<LngLat> dailyPath = fp.planDailyRoute();
-        System.out.println(dailyPath.size());
-        System.out.println(fp.remainingBattery);
-        for(Order o: fp.validOrders){
-            System.out.println(o.getOrderStatus());
-        }
-//        Stack<LngLat> pathToRestaurant = fp.aStarPathFinding(new LngLat(-3.202541470527649,55.943284737579376));
-//        //System.out.println(pathToRestaurant.size());
 //
 //        ArrayList<LngLat> wholePath = new ArrayList<>();
 //

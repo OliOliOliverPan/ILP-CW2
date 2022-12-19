@@ -5,10 +5,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.exc.StreamReadException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
+
+
 
 /**
  * Class representing the order
@@ -33,6 +36,7 @@ public class Order implements Comparable<Order>{
 
 
 
+    //This constructor is for extracting order details from REST
     public Order(@JsonProperty("orderNo")String orderNo, @JsonProperty("orderDate")String orderDate, @JsonProperty("customer")String customer, @JsonProperty("creditCardNumber")String creditCardNumber,
                  @JsonProperty("creditCardExpiry")String creditCardExpiry, @JsonProperty("cvv")String cvv, @JsonProperty("priceTotalInPence")int priceTotalInPence, @JsonProperty("orderItems")ArrayList<String> orderItems) {
         this.orderNo = orderNo;
@@ -52,8 +56,9 @@ public class Order implements Comparable<Order>{
 
 
 
+
     //parse the order of a given day and classify valid and invalid orders
-    public static ArrayList<Order> getOrdersFromRestServer(String month, String date) throws MalformedURLException, InvalidPizzaCombinationException {
+    public static ArrayList<Order> getOrdersFromRestServer(String month, String date) throws MalformedURLException {
 
         //for month and date, if they are less than 10 and do not start with 0, a 0 will be automatically added before them
         if(month.length() == 1){
@@ -131,7 +136,7 @@ public class Order implements Comparable<Order>{
 
 
     // helper function for determining if the detail of an order is valid
-    public static OrderOutcome isValidOrder( Order order) throws MalformedURLException {
+    private static OrderOutcome isValidOrder(Order order) throws MalformedURLException {
 
         Restaurant[] restaurants = Restaurant.getINSTANCE();
 
@@ -201,68 +206,8 @@ public class Order implements Comparable<Order>{
 
 
 
-
-
-//    /**
-//     * Count the total cost of a given order in pence, including an extra delivery cost of 100p
-//     *
-//     * @param order an order whose items are to be calculated the total cost with
-//     *
-//     * @return the total cost of the input order plus 100p delivery cost
-//     *
-//     * @throws IllegalArgumentException if there is no item in the input order
-//     * @throws IllegalArgumentException if the number of pizzas in the order exceeds the maximum capacity of the drone (4)
-//     * @throws IllegalArgumentException if an item in the order cannot be found in any of the given restaurant
-//     * @throws InvalidPizzaCombinationException if the order contains items that cannot be delivered from the same restaurant
-//     */
-//    public static int getDeliveryCost( Order order) throws InvalidPizzaCombinationException, MalformedURLException {
-//
-//        Restaurant[] restaurants = Restaurant.getINSTANCE();
-//        ArrayList<String> orderItems = order.getOrderItems();
-//
-//        if(Order.isValidOrder(order) == OrderOutcome.InvalidPizzaCount){
-//            //throw new IllegalArgumentException("The order is invalid since the number of items is either 0 or exceeds the maximum capacity of drone");
-//            return -1;
-//        }
-//
-//        else if(Order.isValidOrder(order) == OrderOutcome.InvalidPizzaNotDefined){
-//            //throw new IllegalArgumentException("There's item cannot be found in any restaurant");
-//            return -1;
-//        }
-//
-//        else if(Order.isValidOrder(order) == OrderOutcome.InvalidPizzaCombinationMultipleSuppliers){
-//            //throw new InvalidPizzaCombinationException("The items in the order list cannot be delivered from the same restaurant");
-//            return -1;
-//        }
-//
-//        //if above exceptions are not thrown, the order is valid, and we will find the total cost
-//
-//        int totalCost = 0;
-//
-//        // For each ordered item, find its menu among all restaurants and its price in pence,
-//        // then add its cost to the total cost
-//        for(String s: orderItems){
-//            for(Restaurant r: restaurants){
-//                for(Menu m: r.getMenu()){
-//                    if(m.getName().equals((s))){
-//                        totalCost += m.getPriceInPence();
-//                    }
-//                }
-//            }
-//
-//
-//        }
-//
-//        // Add the delivery cost
-//        return totalCost + 100;
-//
-//
-//    }
-
-
-
     // Apply Luhn's Algorithm to determine if a credit card number is valid or not
-    public boolean isValidCreditCardNumber(){
+    private boolean isValidCreditCardNumber(){
         String cardNumber = this.getCreditCardNumber();
 
         // convert each card number digit to int type
@@ -295,6 +240,8 @@ public class Order implements Comparable<Order>{
 
 
 
+
+    //sort the order based on the distance between their corresponding restaurant and Appleton Tower
     @Override
     public int compareTo(Order o) {
 
@@ -358,7 +305,7 @@ public class Order implements Comparable<Order>{
 
 
 
-    public static void main(String[] args) throws InvalidPizzaCombinationException, MalformedURLException {
+    public static void main(String[] args) throws MalformedURLException {
 
         ArrayList<Order> result = Order.getOrdersFromRestServer("04","15");
 
@@ -374,10 +321,10 @@ public class Order implements Comparable<Order>{
         for(Order o: result) {
             System.out.println(o.getCorrespondingRestaurant().getName());
         }
-//        for (Restaurant r: correspondingRestaurants){
-//            System.out.println(r.getName());
-//
-//        }
+        for (Restaurant r: correspondingRestaurants){
+            System.out.println(r.getName());
+
+        }
 
 
 
